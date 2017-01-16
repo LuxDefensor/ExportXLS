@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<Export>
+  <job inn="1111111111"	name="СКЖД" description="отправка Т-304 в ВЭС">
+    <contacts>Контактная информация:</contacts>
+    <contacts>Герман Михайленко</contacts>
+    <contacts>staskue@stavre.elektra.ru</contacts>
+    <contacts>8(8793)36-34-08</contacts>
+    <workingdirectory>C:\XLSExport\Work</workingdirectory>
+    <archive>C:\XLSExport\Archive</archive>
+    <FileNamePrefix>СКЖД для ВЭС за </FileNamePrefix>
+    <email1>cdsir@ves.stavre.elektra.ru</email1>
+    <email1>ote3@ves.stavre.elektra.ru</email1>
+    <email1>staskue@stavre.elektra.ru</email1>
+    <email>luxdefensor@yandex.ru</email>
+    <from>lux_defensor@mail.ru</from>
+    <codes>
+      <device code="4464">
+        <sensor code="191"/>
+        <sensor code="192"/>
+        <sensor code="193"/>
+        <sensor code="194"/>
+        <sensor code="195"/>
+        <sensor code="196"/>
+        <sensor code="197"/>
+        <sensor code="198"/>
+        <sensor code="199"/>
+        <sensor code="200"/>
+        <sensor code="201"/>
+        <sensor code="202"/>
+        <sensor code="203"/>
+        <sensor code="204"/>
+        <sensor code="205"/>
+        <sensor code="206"/>
+        <sensor code="207"/>
+        <sensor code="208"/>
+        <sensor code="209"/>
+        <sensor code="210"/>
+        <sensor code="211"/>
+        <sensor code="212"/>
+        <sensor code="213"/>
+        <sensor code="214"/>
+        <sensor code="215"/>
+        <sensor code="216"/>
+        <sensor code="217"/>
+        <sensor code="218"/>
+        <sensor code="219"/>
+        <sensor code="220"/>
+        <sensor code="221"/>
+        <sensor code="222"/>
+        <sensor code="223"/>
+        <sensor code="224"/>
+        <sensor code="225"/>
+        <sensor code="226"/>
+        <sensor code="227"/>
+        <sensor code="228"/>
+      </device>
+    </codes>
+  </job>
+</Export>
