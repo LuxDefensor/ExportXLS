@@ -84,7 +84,7 @@ namespace ExportXLS
             {
                 Console.Write(job.Attribute("description").Value + ": 0%");
                 string fileName = job.Descendants("FileNamePrefix").First().Value +
-                                  " " + day.ToString("yyyy-MM-dd") + ".xlsx";
+                                  " " + day.ToString("yyyy-MM-dd") + ".xls";
                 int sensorCount = job.Descendants("sensor").Count();
                 string[] deviceCodes = new string[sensorCount]; // This array must be the same size as sensorCodes
                 string[] sensorCodes = new string[sensorCount];
