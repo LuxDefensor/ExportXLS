@@ -128,6 +128,8 @@ namespace ExportXLS
             }
         }
 
+
+
         public double GetSingleHalfhour(string deviceCode, string sensorCode, DateTime halfhour)
         {
             object result;
@@ -153,6 +155,36 @@ namespace ExportXLS
                 if (result == null || Convert.IsDBNull(result))
                     throw new Exception(string.Format("Ошибка получения значения получасовки для {0}.{1} за {2}",
                     deviceCode, sensorCode, halfhour) +
+                    Environment.NewLine + "Запрос вернул пустой набор строк");
+                return (double)result;
+            }
+        }
+
+        public double GetFixedValue(string deviceCode, string sensorCode, DateTime timePoint)
+        {
+            object result;
+            using (SqlConnection cn = new SqlConnection(cs))
+            {
+                cn.Open();
+                StringBuilder sql = new StringBuilder();
+                sql.Append("SELECT value0 FROM DATA WHERE ");
+                sql.AppendFormat("Object={0} AND Item={1} AND Parnumber=101 AND Data_Date='{2}'",
+                    deviceCode, sensorCode, timePoint.ToString("yyyyMMdd HH:mm"));
+                SqlCommand cmd = cn.CreateCommand();
+                cmd.CommandText = sql.ToString();
+                try
+                {
+                    result = cmd.ExecuteScalar();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(
+                        string.Format("Не удалось получить показания для {0}.{1} на {2}",
+                                            deviceCode, sensorCode, timePoint), ex);
+                }
+                if (result == null || Convert.IsDBNull(result))
+                    throw new Exception(string.Format("Ошибка получения показаний для {0}.{1} на {2}",
+                    deviceCode, sensorCode, timePoint) +
                     Environment.NewLine + "Запрос вернул пустой набор строк");
                 return (double)result;
             }
