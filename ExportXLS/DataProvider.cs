@@ -19,6 +19,7 @@ namespace ExportXLS
             csb.InitialCatalog = database;
             csb.UserID = user;
             csb.Password = password;
+
             cs = csb.ToString();
         }
 
@@ -126,6 +127,45 @@ namespace ExportXLS
                 else
                     return 0;
             }
+        }
+
+        public DataTable GetAllHalfhours(string[] devices, string[] items, DateTime dtFrom, DateTime dtTill)
+        {
+            DataTable result = new DataTable();
+            SqlDataAdapter da;
+            SqlCommand cmd;
+            string[] codes; // each code is made up from a device's code and a sensor's code like this: D * 1000 + S
+            string[] bracketedCodes;
+            codes = devices.Zip(items, (d, i) => d + i.PadLeft(3, '0')).ToArray();
+            bracketedCodes = codes.Select(s => '[' + s + ']').ToArray();
+            using (SqlConnection cn = new SqlConnection(cs))
+            {
+                cn.Open();
+                cmd = cn.CreateCommand();
+                StringBuilder sql = new StringBuilder();
+                sql.AppendLine("WITH cte as (");
+                sql.AppendLine("SELECT Object * 1000 + Item code, Data_Date, Value0 FROM DATA ");
+                sql.AppendFormat("WHERE Data_Date between '{0}' AND '{1}' ",
+                    dtFrom.ToString("yyyyMMdd HH:mm"), dtTill.ToString("yyyyMMdd HH:mm"));
+                sql.AppendLine();
+                sql.AppendFormat("AND Parnumber=12 AND Object * 1000 + Item IN ({0}))", string.Join(",", codes));
+                sql.AppendLine();
+                sql.AppendLine("SELECT Data_Date," + string.Join(",", bracketedCodes));
+                sql.AppendLine("FROM cte");
+                sql.AppendLine("PIVOT");
+                sql.AppendFormat("(SUM(Value0) FOR code IN ({0})) AS Result", string.Join(",", bracketedCodes));
+                cmd.CommandText = sql.ToString();
+                da = new SqlDataAdapter(cmd);
+                try
+                {
+                    da.Fill(result);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Не удалось выгрузить получасовки", ex);
+                }
+            }
+            return result;
         }
 
 

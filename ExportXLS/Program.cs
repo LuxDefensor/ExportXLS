@@ -82,7 +82,7 @@ namespace ExportXLS
         {
             foreach (XElement job in xml)
             {
-                Console.Write(job.Attribute("description").Value + ": 0%");
+                Console.Write(job.Attribute("description").Value + ": в процессе...");
                 string fileName = job.Descendants("FileNamePrefix").First().Value +
                                   " " + day.ToString("yyyy-MM-dd") + ".xlsx";
                 int sensorCount = job.Descendants("sensor").Count();
@@ -101,7 +101,7 @@ namespace ExportXLS
                         i++;
                     } // end of foreach (XElement sensor in device.Descendants("sensor"))
                 } // end of foreach (XElement device in job.Descendants("device"))
-                ToXLS101(deviceCodes, sensorCodes, day, Path.Combine(workingFolder, fileName));
+                ToXLS12(deviceCodes, sensorCodes, day, Path.Combine(workingFolder, fileName));
                 string[] addresses = job.Descendants("email").Select(el => el.Value).ToArray();
                 StringBuilder contacts=new StringBuilder();
                 foreach (XElement cont in job.Descendants("contacts"))
@@ -163,7 +163,7 @@ namespace ExportXLS
             }
         }
 
-        private static void ToXLS12(string[] devices, string[] sensors, DateTime day, string fileName)
+        private static void ToXLS12_broken(string[] devices, string[] sensors, DateTime day, string fileName)
         {
             DataProvider d = new DataProvider(settings.Server, settings.Database, settings.UserName, settings.Password);
             Excel.Range c;
@@ -488,6 +488,134 @@ namespace ExportXLS
             releaseObject(ws1);
             releaseObject(wb);
             releaseObject(xls);
+        }
+
+        private static void ToXLS12(string[] devices, string[] sensors, DateTime day, string fileName)
+        {
+            DataProvider d = new DataProvider(settings.Server, settings.Database, settings.UserName, settings.Password);
+            Excel.Range c;
+            Excel.Application xls;
+            Excel.Workbook wb;
+            int firstRow = 4;
+            int totalSensors = sensors.Length;
+            int totalRows;
+            int totalData;
+            string deviceCode;
+            string sensorCode;
+            double value;
+            xls = new Excel.Application();
+            xls.SheetsInNewWorkbook = 1;
+            wb = xls.Workbooks.Add();
+            Excel.Worksheet ws1 = (Excel.Worksheet)wb.Worksheets[1];
+            ws1.Name = "Показания";
+            #region Prepare headers
+            c = (Excel.Range)(ws1.Cells[1, 1]);
+            c.Value = "Дата:";
+            c.HorizontalAlignment = Excel.XlHAlign.xlHAlignRight;
+            c = (Excel.Range)(ws1.Cells[1, 2]);
+            c.Value = day.ToShortDateString();
+            c.HorizontalAlignment = Excel.XlHAlign.xlHAlignLeft;
+            c = (Excel.Range)(ws1.Cells[firstRow - 1, 1]);
+            c.Value = "Дата";
+            c.ColumnWidth = 12;
+            c.Interior.Color = Excel.XlRgbColor.rgbGrey;
+            c = (Excel.Range)(ws1.Cells[firstRow - 1, 2]);
+            c.Value = "Время";
+            c.ColumnWidth = 13;
+            c.Interior.Color = Excel.XlRgbColor.rgbGrey;
+            #endregion
+
+            totalRows = 48;
+            totalData = totalRows * totalSensors;
+            string deviceName, sensorName;
+            DateTime currentDate = day;
+
+            #region Write dates and times into two leftmost coumns
+            int currentRow = 0;
+            int currentColumn = 3;
+            totalRows = 48;
+            string[,] leftColumns = new string[totalRows, 2];
+            while (currentDate < day.AddDays(1))
+            {
+                leftColumns[currentRow, 0] =
+                    currentDate.Date.ToShortDateString();
+                leftColumns[currentRow, 1] =
+                    string.Format("{0:00}:{1:00} - {2:00}:{3:00}",
+                                  currentDate.TimeOfDay.Hours,
+                                  currentDate.TimeOfDay.Minutes,
+                                  currentDate.AddMinutes(30).TimeOfDay.Hours,
+                                  currentDate.AddMinutes(30).TimeOfDay.Minutes);
+                currentDate = currentDate.AddMinutes(30);
+                currentRow++;
+            }
+            c = (Excel.Range)ws1.Cells[firstRow, 1];
+            c = c.Resize[totalRows, 2];
+            c.Value = leftColumns;
+            #endregion
+
+
+            #region Write channel names in first
+            for (int i = 0; i < sensors.Length; i++)
+            {
+                deviceCode = devices[i];
+                sensorCode = sensors[i];
+                // halfhours column headers
+                c = (Excel.Range)(ws1.Cells[1, currentColumn]);
+                c.ColumnWidth = 18;
+                deviceName = d.GetDeviceName(deviceCode);
+                c.Value = deviceName;
+                sensorName = d.GetSensorName(deviceCode, sensorCode);
+                ws1.Cells[2, currentColumn] = sensorName;
+                c = (Excel.Range)(ws1.Cells[firstRow - 1, currentColumn]);
+                c.FormulaR1C1 = string.Format("=SUM(R[1]C:R[{0}]C)/2", totalRows);
+                c.Font.Bold = true;
+                c.HorizontalAlignment = Excel.XlHAlign.xlHAlignCenter;
+                c.Interior.Color = Excel.XlRgbColor.rgbGrey;
+                currentColumn++;
+            }
+            #endregion
+            int cursorPosition = Console.CursorLeft - 2;
+            System.Data.DataTable halfhours = d.GetAllHalfhours(devices, sensors, day.AddMinutes(30), day.AddDays(1));
+            System.Data.DataRow oneRow;
+            string[,] allValues = new string[totalRows, totalSensors];
+            currentColumn = 0;
+            currentRow = 0;
+            foreach (System.Data.DataRow row in halfhours.Rows)
+            {
+                for(int col=0;col<totalSensors;col++)
+                {
+                    allValues[currentRow, col] = row[col].ToString().Replace(',', '.');
+                }
+                currentRow++;
+            }
+            c = (Excel.Range)ws1.Cells[firstRow, 3];
+            c = c.Resize[totalRows, totalSensors];
+            c.Value = allValues;
+            ws1.UsedRange.Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+            ws1.Activate();
+            c.Select();
+            Excel.Windows xlsWindows = wb.Windows;
+            Excel.Window xlsWindow = xlsWindows[1];
+            //xlsWindow.FreezePanes = true;
+            c = (Excel.Range)ws1.Cells[firstRow, 3];
+            ws1.Activate();
+            c.Select();
+            //xlsWindow = xlsWindows[1];
+            xlsWindow.FreezePanes = true;
+            c = (Excel.Range)ws1.Cells[firstRow - 1, 3];
+            c = c.Resize[1, totalSensors];
+            c.NumberFormat = "#,##0";
+            xlsWindow.Activate();
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+            wb.SaveAs(fileName);
+            wb.Close();
+            xls.Quit();
+            releaseObject(ws1);
+            releaseObject(wb);
+            releaseObject(xls);
+            Console.WriteLine();
+            Console.WriteLine("OK");
         }
 
         private static void releaseObject(object obj)
