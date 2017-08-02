@@ -118,7 +118,7 @@ namespace ExportXLS
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(string.Format("Ощибка подсчёта количества собранных значений для {0}.{1}",
+                    throw new Exception(string.Format("Ошибка подсчёта количества собранных значений для {0}.{1}",
                         objCode, itemCode), ex);
                 }
                 if (result != null && !Convert.IsDBNull(result))
@@ -127,7 +127,6 @@ namespace ExportXLS
                     return 0;
             }
         }
-
 
 
         public double GetSingleHalfhour(string deviceCode, string sensorCode, DateTime halfhour)
