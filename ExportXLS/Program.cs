@@ -576,7 +576,6 @@ namespace ExportXLS
             #endregion
             int cursorPosition = Console.CursorLeft - 2;
             System.Data.DataTable halfhours = d.GetAllHalfhours(devices, sensors, day.AddMinutes(30), day.AddDays(1));
-            System.Data.DataRow oneRow;
             string[,] allValues = new string[totalRows, totalSensors];
             currentColumn = 0;
             currentRow = 0;
@@ -584,7 +583,7 @@ namespace ExportXLS
             {
                 for(int col=0;col<totalSensors;col++)
                 {
-                    allValues[currentRow, col] = row[col].ToString().Replace(',', '.');
+                    allValues[currentRow, col] = row[col + 1].ToString().Replace(',', '.');
                 }
                 currentRow++;
             }
